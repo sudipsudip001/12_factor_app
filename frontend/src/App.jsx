@@ -18,19 +18,41 @@ function App() {
     setLoading(true);
     setError(null);
 
+    const apiUrl = `${
+      import.meta.env.VITE_REACT_APP_API_BASE_URL
+    }/api/weather?city=${encodeURIComponent(city)}`;
+    console.log("Making request to:", apiUrl);
+
     try {
-      // Send request to your FastAPI backend
-      const response = await fetch(
-        `/api/weather?city=${encodeURIComponent(city)}`
-      );
+      // Alternative fetch approach with explicit headers
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Response status:", response.status);
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
 
-      const data = await response.json();
-      setWeather(data);
+      // For debugging: log the raw response text
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
+
+      // Now parse the JSON (we need to parse the text we already read)
+      try {
+        const data = JSON.parse(responseText);
+        setWeather(data);
+      } catch (jsonError) {
+        console.error("JSON parse error:", jsonError);
+        setError(`Failed to parse JSON response: ${jsonError.message}`);
+      }
     } catch (err) {
+      console.error("Fetch error:", err);
       setError(`Failed to fetch weather data: ${err.message}`);
       setWeather(null);
     } finally {
